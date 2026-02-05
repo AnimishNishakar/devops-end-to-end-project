@@ -17,11 +17,14 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    docker.build("${ECR_REPO}:${IMAGE_TAG}")
+                dir('app') {
+                    sh '''
+                      docker build -t 876178095025.dkr.ecr.ap-south-1.amazonaws.com/flask-app:1 .
+                    '''
                 }
             }
         }
+
 
         stage('Push Image to ECR') {
             steps {
@@ -49,3 +52,4 @@ pipeline {
         }
     }
 }
+
