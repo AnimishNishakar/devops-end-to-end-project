@@ -19,7 +19,7 @@ pipeline {
             steps {
                 dir('app') {
                     sh '''
-                      docker build -t 876178095025.dkr.ecr.ap-south-1.amazonaws.com/flask-app:1 .
+                      docker build -t $ECR_REPO:$IMAGE_TAG .
                     '''
                 }
             }
@@ -52,4 +52,5 @@ pipeline {
         }
     }
 }
+
 
