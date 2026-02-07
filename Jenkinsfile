@@ -65,6 +65,7 @@ pipeline {
 	        '''
 	    }
 	}
+	
 	stage('Blue-Green Deploy') {
 	    steps {
 	        sh '''
@@ -72,42 +73,36 @@ pipeline {
 
 	        IMAGE=$ECR_REPO:$IMAGE_TAG
 
-	        echo "Checking which version is live..."
-
 	        if docker ps | grep flask-blue; then
 	            LIVE="blue"
+	            NEW="green"
+	            NEW_PORT=5002
 	        else
 	            LIVE="green"
-	        fi
-
-	        echo "Live version: $LIVE"
-
-	        if [ "$LIVE" = "blue" ]; then
-	            NEW="green"
-	            OLD="blue"
-	            NEW_PORT=5001
-	        else
 	            NEW="blue"
-	            OLD="green"
-	            NEW_PORT=5000
+	            NEW_PORT=5001
 	        fi
 
-	        echo "Deploying $NEW version..."
+	        echo "Live: $LIVE | Deploying: $NEW"
 
 	        docker run -d --name flask-$NEW -p $NEW_PORT:5000 $IMAGE
 
 	        sleep 10
 
-	        echo "Switching traffic..."
+	        echo "Switching traffic via Nginx"
 
-	        docker stop flask-$OLD || true
-	        docker rm flask-$OLD || true
+	        sudo sed -i "s/flask-$LIVE/flask-$NEW/" /etc/nginx/conf.d/flask.conf
+	        sudo nginx -s reload
 
-	        echo "Deployment completed. Active version: $NEW"
+	        docker stop flask-$LIVE || true
+	        docker rm flask-$LIVE || true
+
+	        echo "Blue-Green switch completed"
 	        '''
 	    }
 	}
-    }
+    }	
+
     post {
         success {
             echo "Pipeline completed successfully 🚀"
