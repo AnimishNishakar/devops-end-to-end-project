@@ -40,38 +40,38 @@ pipeline {
                 }
             }
         }
-
-        stage('Push Image to ECR') {
+	
+	stage('Push Image to ECR') {
             steps {
                 sh '''
                 docker push $ECR_REPO:$IMAGE_TAG
                 '''
             }
         }
+    	
+	stage('Deploy Application') {
+	    steps {
+	        sh '''
+	        docker stop flask-app || true
+	        docker rm flask-app || true
+
+	        docker pull $ECR_REPO:$IMAGE_TAG
+
+	        docker run -d \
+	          --name flask-app \
+	          -p 5000:5000 \
+	          --restart always \
+	          $ECR_REPO:$IMAGE_TAG
+	        '''
+	    }
+	}
+
+	post {
+	    success {
+           	echo "✅ Docker image pushed to ECR successfully: $ECR_REPO:$IMAGE_TAG"
+       	    }
+	    failure {
+            	echo "❌ Pipeline failed"
+       	    }
+    	}
     }
-
-    post {
-        success {
-            echo "✅ Docker image pushed to ECR successfully: $ECR_REPO:$IMAGE_TAG"
-        }
-        failure {
-            echo "❌ Pipeline failed"
-        }
-    }
-}
-stage('Deploy Application') {
-    steps {
-        sh '''
-        docker stop flask-app || true
-        docker rm flask-app || true
-
-        docker pull $ECR_REPO:$IMAGE_TAG
-
-        docker run -d \
-          --name flask-app \
-          -p 5000:5000 \
-          $ECR_REPO:$IMAGE_TAG
-        '''
-    }
-}
-
