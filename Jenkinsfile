@@ -65,13 +65,13 @@ pipeline {
 	        '''
 	    }
 	}
-
-	post {
-	    success {
-           	echo "✅ Docker image pushed to ECR successfully: $ECR_REPO:$IMAGE_TAG"
-       	    }
-	    failure {
-            	echo "❌ Pipeline failed"
-       	    }
-    	}
     }
+    post {
+        success {
+            echo "Pipeline completed successfully 🚀"
+        }
+        failure {
+            echo "Pipeline failed ❌"
+        }
+    }
+}
