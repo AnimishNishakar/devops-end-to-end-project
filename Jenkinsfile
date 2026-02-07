@@ -65,6 +65,48 @@ pipeline {
 	        '''
 	    }
 	}
+	stage('Blue-Green Deploy') {
+	    steps {
+	        sh '''
+	        set -e
+
+	        IMAGE=$ECR_REPO:$IMAGE_TAG
+
+	        echo "Checking which version is live..."
+
+	        if docker ps | grep flask-blue; then
+	            LIVE="blue"
+	        else
+	            LIVE="green"
+	        fi
+
+	        echo "Live version: $LIVE"
+
+	        if [ "$LIVE" = "blue" ]; then
+	            NEW="green"
+	            OLD="blue"
+	            NEW_PORT=5001
+	        else
+	            NEW="blue"
+	            OLD="green"
+	            NEW_PORT=5000
+	        fi
+
+	        echo "Deploying $NEW version..."
+
+	        docker run -d --name flask-$NEW -p $NEW_PORT:5000 $IMAGE
+
+	        sleep 10
+
+	        echo "Switching traffic..."
+
+	        docker stop flask-$OLD || true
+	        docker rm flask-$OLD || true
+
+	        echo "Deployment completed. Active version: $NEW"
+	        '''
+	    }
+	}
     }
     post {
         success {
