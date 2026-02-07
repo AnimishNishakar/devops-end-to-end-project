@@ -59,4 +59,19 @@ pipeline {
         }
     }
 }
+stage('Deploy Application') {
+    steps {
+        sh '''
+        docker stop flask-app || true
+        docker rm flask-app || true
+
+        docker pull $ECR_REPO:$IMAGE_TAG
+
+        docker run -d \
+          --name flask-app \
+          -p 5000:5000 \
+          $ECR_REPO:$IMAGE_TAG
+        '''
+    }
+}
 
